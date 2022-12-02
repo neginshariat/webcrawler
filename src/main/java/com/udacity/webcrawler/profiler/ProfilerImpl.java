@@ -1,12 +1,17 @@
 package com.udacity.webcrawler.profiler;
 
 import javax.inject.Inject;
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Proxy;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.logging.Handler;
 
 import static java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME;
 
@@ -25,21 +30,38 @@ final class ProfilerImpl implements Profiler {
     this.startTime = ZonedDateTime.now(clock);
   }
 
+
+  private boolean isProfiledValues(Class<?> Klass){
+  boolean profiledValue= Arrays.stream(Klass.getDeclaredMethods()).anyMatch(
+          result -> result.getAnnotation(Profiled.class) != null);
+    return profiledValue;
+  }
   @Override
   public <T> T wrap(Class<T> klass, T delegate) {
     Objects.requireNonNull(klass);
+    if (!isProfiledValues(klass)) {
+      throw new IllegalArgumentException("Not Profiled");
+    }
 
-    // TODO: Use a dynamic proxy (java.lang.reflect.Proxy) to "wrap" the delegate in a
-    //       ProfilingMethodInterceptor and return a dynamic proxy from this method.
-    //       See https://docs.oracle.com/javase/10/docs/api/java/lang/reflect/Proxy.html.
+    ProfilingMethodInterceptor profilingMethodInterceptor= new ProfilingMethodInterceptor(state,startTime,clock);
+    Object proxy = Proxy.newProxyInstance(
+            klass.getClassLoader(),
+            new Class<?>[] {klass},
+            profilingMethodInterceptor);
+    return (T) proxy;
 
-    return delegate;
+
   }
 
   @Override
   public void writeData(Path path) {
-    // TODO: Write the ProfilingState data to the given file path. If a file already exists at that
-    //       path, the new data should be appended to the existing file.
+    Objects.requireNonNull(path);
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(path)){
+      writeData(bufferedWriter);
+    }catch (IOException exception){
+      exception.getMessage();
+    }
+
   }
 
   @Override

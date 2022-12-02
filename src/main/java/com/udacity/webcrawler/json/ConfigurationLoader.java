@@ -16,31 +16,23 @@ public final class ConfigurationLoader {
 
   private final Path path;
 
-  /**
-   * Create a {@link ConfigurationLoader} that loads configuration from the given {@link Path}.
-   */
   public ConfigurationLoader(Path path) {
     this.path = Objects.requireNonNull(path);
   }
 
-  /**
-   * Loads configuration from this {@link ConfigurationLoader}'s path
-   *
-   * @return the loaded {@link CrawlerConfiguration}.
-   */
-  public CrawlerConfiguration load() throws IOException {
-    // TODO: Fill in this method.
-    Reader BufferedReader = Files.newBufferedReader(path);
+
+  public CrawlerConfiguration load(){
+/*    Reader BufferedReader = Files.newBufferedReader(path);
     BufferedReader.close();
-    return read(BufferedReader);
+    return read(BufferedReader);*/
+    try (Reader reader = Files.newBufferedReader(path)) {
+      return read(reader);
+    } catch (IOException e) {
+      System.out.println("IO Exception is:"+ e);
+      return null;
+    }
   }
 
-  /**
-   * Loads crawler configuration from the given reader.
-   *
-   * @param reader a Reader pointing to a JSON string that contains crawler configuration.
-   * @return a crawler configuration
-   */
   public static CrawlerConfiguration read(Reader reader) {
     // This is here to get rid of the unused variable warning.
     Objects.requireNonNull(reader);
