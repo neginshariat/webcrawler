@@ -43,7 +43,7 @@ final class ProfilerImpl implements Profiler {
       throw new IllegalArgumentException("Not Profiled");
     }
 
-    ProfilingMethodInterceptor profilingMethodInterceptor= new ProfilingMethodInterceptor(state,startTime,clock);
+    ProfilingMethodInterceptor profilingMethodInterceptor= new ProfilingMethodInterceptor(state,delegate,clock);
     Object proxy = Proxy.newProxyInstance(
             klass.getClassLoader(),
             new Class<?>[] {klass},

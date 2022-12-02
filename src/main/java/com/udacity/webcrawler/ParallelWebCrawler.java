@@ -12,6 +12,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.udacity.webcrawler.parser.PageParserFactory;
 
@@ -88,10 +89,20 @@ public class ParallelWebCrawler implements WebCrawler {
      if (maxDepth == 0 || clock.instant().isAfter(deadLine)) {
         return;
       }
-      if (visitedUrls.contains(url)) {
-        return;
-      }
-      visitedUrls.add(url);
+        for (Pattern pattern : ignoredUrls) {
+            if (pattern.matcher(url).matches()) {
+                return;
+            }
+        }
+/*        List<Pattern> patterns=  ignoredUrls.stream()
+                .filter(pattern -> pattern.matcher(url).matches())
+                .collect(Collectors.toList());*/
+
+        // i tried to write this piece with Stream but it doesn't work. It would be nice if you wrote if for me in feedback. Thanks
+        if (!visitedUrls.add(url)) {
+            return;
+        }
+
       PageParser.Result result = parserFactory.get(url).parse();
       for (Map.Entry<String, Integer> e : result.getWordCounts().entrySet()) {
         if (counts.containsKey(e.getKey())) {
@@ -100,9 +111,12 @@ public class ParallelWebCrawler implements WebCrawler {
           counts.put(e.getKey(), e.getValue());
         }
       }
-      for (String link : result.getLinks()) {
-        invokeAll(new CrawResultlInternal(link, deadLine, maxDepth,counts,visitedUrls));
-      }
+
+        List<CrawResultlInternal> tasks = new ArrayList<>();
+        for (String link : result.getLinks()) {
+            tasks.add(new CrawResultlInternal(link, deadLine, maxDepth - 1, counts, visitedUrls));
+        }
+        invokeAll(tasks);
     }
 
   }

@@ -27,7 +27,7 @@ final class ProfilingMethodInterceptor implements InvocationHandler {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-    if (method.getAnnotation(Profiled.class).equals(Object.class)) {
+    if (method.getAnnotation(Profiled.class)!= null) {
       final Instant start = clock.instant();
       try {
         method.invoke(objectChecker, args);
